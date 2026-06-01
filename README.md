@@ -137,11 +137,13 @@ unzip cnc-ddraw.zip -d cnc-ddraw
 cp cnc-ddraw/ddraw.dll "$GAME_DIR/"
 ```
 
-**IV50 Codec** (required for in-game cutscene videos):
+**IV50 Codec** (installs the Intel Indeo Video 5.0 decoder into Wine):
 
 ```bash
 WINEPREFIX=~/Games/umu/umu-default wine ~/Games/ProjectIGI/patches/"IV50 Codec"/codinstl.exe
 ```
+
+> **Note:** The IV50 codec installs the correct video decoder but does not fully fix video playback. The intro videos still crash Wine due to `winegstreamer.dll` missing the `winegstreamer_create_color_converter` function — a known unimplemented feature in Wine when using a 64-bit prefix. The workaround is to rename the intro videos (Step 8). A proper fix would require recreating the Wine prefix with `WINEARCH=win32`.
 
 ---
 
