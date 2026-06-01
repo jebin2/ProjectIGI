@@ -216,6 +216,41 @@ mv "$INTRO_DIR/vp.avi"        "$INTRO_DIR/vp.avi.bak"
 
 ---
 
+## Controller Support (8BitDo Ultimate 2C)
+
+Project IGI has **no native controller support** — keyboard + mouse only. Use **AntiMicroX** to map your controller.
+
+```bash
+sudo pacman -S antimicrox
+```
+
+A ready-made profile is included: `controller_mapping.gamecontroller.amgp`
+
+### Load the profile in AntiMicroX
+
+1. Open AntiMicroX
+2. Click **Load Profile** → select `controller_mapping.gamecontroller.amgp`
+3. Launch IGI from Lutris — AntiMicroX runs in background and translates inputs
+
+### Button mapping
+
+| Controller | Action | Key |
+|-----------|--------|-----|
+| Left stick | Move | W / A / S / D |
+| Right stick | Look / Aim | Mouse move |
+| RT | Shoot | Left click |
+| LT | Zoom / Aim | Right click |
+| A | Jump | Space |
+| B | Crouch | C |
+| X | Reload | R |
+| Y | Interact | F |
+| LB | Sneak | Left Shift |
+| RB | Next weapon | ] |
+| Start | Menu | Escape |
+| Back | Map | M |
+
+---
+
 ## Notes
 
 - The ISO does **not** need to be mounted after the no-CD patch is applied
