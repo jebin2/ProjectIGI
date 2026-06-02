@@ -13,66 +13,50 @@
         <vdpadButtonAssociation axis="0" button="15" direction="2"/>
     </vdpadButtonAssociations>
     <names>
-        <controlstickname index="1">Left Stick</controlstickname>
-        <controlstickname index="2">Right Stick</controlstickname>
+        <controlstickname index="1">Stick 1</controlstickname>
+        <controlstickname index="2">Stick 2</controlstickname>
     </names>
     <sets>
         <set index="1">
-
-            <!-- Left Stick → W/A/S/D (move) -->
             <stick index="1">
                 <stickbutton index="7">
-                    <!-- Up / Forward → W -->
                     <slots>
                         <slot>
-                            <code>0x57</code>
-                            <mode>keyboard</mode>
-                        </slot>
-                    </slots>
-                </stickbutton>
-                <stickbutton index="1">
-                    <!-- Down / Backward → S -->
-                    <slots>
-                        <slot>
-                            <code>0x53</code>
-                            <mode>keyboard</mode>
-                        </slot>
-                    </slots>
-                </stickbutton>
-                <stickbutton index="3">
-                    <!-- Strafe Left → A -->
-                    <slots>
-                        <slot>
-                            <code>0x41</code>
+                            <code>0x1000012</code>
                             <mode>keyboard</mode>
                         </slot>
                     </slots>
                 </stickbutton>
                 <stickbutton index="5">
-                    <!-- Strafe Right → D -->
                     <slots>
                         <slot>
-                            <code>0x44</code>
+                            <code>0x1000015</code>
                             <mode>keyboard</mode>
                         </slot>
                     </slots>
                 </stickbutton>
-            </stick>
-
-            <!-- Right Stick → Mouse movement (look / aim) -->
-            <stick index="2">
-                <stickbutton index="7">
+                <stickbutton index="3">
                     <slots>
                         <slot>
-                            <code>3</code>
-                            <mode>mousemovement</mode>
+                            <code>0x1000014</code>
+                            <mode>keyboard</mode>
                         </slot>
                     </slots>
                 </stickbutton>
                 <stickbutton index="1">
                     <slots>
                         <slot>
-                            <code>1</code>
+                            <code>0x1000013</code>
+                            <mode>keyboard</mode>
+                        </slot>
+                    </slots>
+                </stickbutton>
+            </stick>
+            <stick index="2">
+                <stickbutton index="7">
+                    <slots>
+                        <slot>
+                            <code>3</code>
                             <mode>mousemovement</mode>
                         </slot>
                     </slots>
@@ -93,32 +77,74 @@
                         </slot>
                     </slots>
                 </stickbutton>
+                <stickbutton index="1">
+                    <slots>
+                        <slot>
+                            <code>1</code>
+                            <mode>mousemovement</mode>
+                        </slot>
+                    </slots>
+                </stickbutton>
             </stick>
-
-            <!-- LT (trigger 5) → Right mouse button (zoom / aim) -->
+            <dpad index="1">
+                <dpadbutton index="4">
+                    <slots>
+                        <slot>
+                            <code>0x1000017</code>
+                            <mode>keyboard</mode>
+                        </slot>
+                    </slots>
+                </dpadbutton>
+                <dpadbutton index="8">
+                    <slots>
+                        <slot>
+                            <code>0x4f</code>
+                            <mode>keyboard</mode>
+                        </slot>
+                    </slots>
+                </dpadbutton>
+                <dpadbutton index="2">
+                    <slots>
+                        <slot>
+                            <code>0x57</code>
+                            <mode>keyboard</mode>
+                        </slot>
+                    </slots>
+                </dpadbutton>
+                <dpadbutton index="1">
+                    <slots>
+                        <slot>
+                            <code>0x1000016</code>
+                            <mode>keyboard</mode>
+                        </slot>
+                    </slots>
+                </dpadbutton>
+            </dpad>
             <trigger index="5">
+                <deadZone>2000</deadZone>
                 <throttle>positivehalf</throttle>
-                <slots>
-                    <slot>
-                        <code>3</code>
-                        <mode>mousebutton</mode>
-                    </slot>
-                </slots>
+                <triggerbutton index="2">
+                    <slots>
+                        <slot>
+                            <code>3</code>
+                            <mode>mousebutton</mode>
+                        </slot>
+                    </slots>
+                </triggerbutton>
             </trigger>
-
-            <!-- RT (trigger 6) → Left mouse button (shoot) -->
             <trigger index="6">
+                <deadZone>2000</deadZone>
                 <throttle>positivehalf</throttle>
-                <slots>
-                    <slot>
-                        <code>1</code>
-                        <mode>mousebutton</mode>
-                    </slot>
-                </slots>
+                <triggerbutton index="2">
+                    <slots>
+                        <slot>
+                            <code>1</code>
+                            <mode>mousebutton</mode>
+                        </slot>
+                    </slots>
+                </triggerbutton>
             </trigger>
-
-            <!-- A → Space (jump) -->
-            <button index="1">
+            <button index="5">
                 <slots>
                     <slot>
                         <code>0x20</code>
@@ -126,9 +152,23 @@
                     </slot>
                 </slots>
             </button>
-
-            <!-- B → C (crouch) -->
-            <button index="2">
+            <button index="8">
+                <slots>
+                    <slot>
+                        <code>0x2000ffb1</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                </slots>
+            </button>
+            <button index="11">
+                <slots>
+                    <slot>
+                        <code>0x11000021</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                </slots>
+            </button>
+            <button index="10">
                 <slots>
                     <slot>
                         <code>0x43</code>
@@ -136,38 +176,191 @@
                     </slot>
                 </slots>
             </button>
-
-            <!-- X → R (reload) -->
             <button index="3">
                 <slots>
                     <slot>
-                        <code>0x52</code>
+                        <code>0x1000004</code>
                         <mode>keyboard</mode>
                     </slot>
                 </slots>
             </button>
-
-            <!-- Y → F (interact / use) -->
+            <button index="6">
+                <toggle>true</toggle>
+                <slots>
+                    <slot>
+                        <code>0x1000000</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                </slots>
+            </button>
+            <button index="7">
+                <slots>
+                    <slot>
+                        <code>0x11000020</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                </slots>
+            </button>
             <button index="4">
                 <slots>
                     <slot>
-                        <code>0x46</code>
+                        <code>0x11000020</code>
                         <mode>keyboard</mode>
                     </slot>
                 </slots>
             </button>
-
-            <!-- LB → Left Shift (sneak) -->
+            <button index="1">
+                <turbointerval>100</turbointerval>
+                <slots>
+                    <slot>
+                        <code>0x2000ffb0</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                </slots>
+            </button>
+            <button index="2">
+                <slots>
+                    <slot>
+                        <code>0x1000003</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                </slots>
+            </button>
+        </set>
+        <set index="2">
+            <stick index="1">
+                <stickbutton index="7">
+                    <slots>
+                        <slot>
+                            <code>0x1000012</code>
+                            <mode>keyboard</mode>
+                        </slot>
+                    </slots>
+                </stickbutton>
+                <stickbutton index="5">
+                    <slots>
+                        <slot>
+                            <code>0x1000015</code>
+                            <mode>keyboard</mode>
+                        </slot>
+                    </slots>
+                </stickbutton>
+                <stickbutton index="3">
+                    <slots>
+                        <slot>
+                            <code>0x1000014</code>
+                            <mode>keyboard</mode>
+                        </slot>
+                    </slots>
+                </stickbutton>
+                <stickbutton index="1">
+                    <slots>
+                        <slot>
+                            <code>0x1000013</code>
+                            <mode>keyboard</mode>
+                        </slot>
+                    </slots>
+                </stickbutton>
+            </stick>
+            <stick index="2">
+                <stickbutton index="7">
+                    <slots>
+                        <slot>
+                            <code>3</code>
+                            <mode>mousemovement</mode>
+                        </slot>
+                    </slots>
+                </stickbutton>
+                <stickbutton index="5">
+                    <slots>
+                        <slot>
+                            <code>2</code>
+                            <mode>mousemovement</mode>
+                        </slot>
+                    </slots>
+                </stickbutton>
+                <stickbutton index="3">
+                    <slots>
+                        <slot>
+                            <code>4</code>
+                            <mode>mousemovement</mode>
+                        </slot>
+                    </slots>
+                </stickbutton>
+                <stickbutton index="1">
+                    <slots>
+                        <slot>
+                            <code>1</code>
+                            <mode>mousemovement</mode>
+                        </slot>
+                    </slots>
+                </stickbutton>
+            </stick>
+            <dpad index="1">
+                <dpadbutton index="4">
+                    <slots>
+                        <slot>
+                            <code>0x39</code>
+                            <mode>keyboard</mode>
+                        </slot>
+                    </slots>
+                </dpadbutton>
+                <dpadbutton index="2">
+                    <slots>
+                        <slot>
+                            <code>0x38</code>
+                            <mode>keyboard</mode>
+                        </slot>
+                    </slots>
+                </dpadbutton>
+                <dpadbutton index="1">
+                    <slots>
+                        <slot>
+                            <code>0x37</code>
+                            <mode>keyboard</mode>
+                        </slot>
+                    </slots>
+                </dpadbutton>
+            </dpad>
+            <trigger index="5">
+                <throttle>positivehalf</throttle>
+            </trigger>
+            <trigger index="6">
+                <deadZone>2000</deadZone>
+                <throttle>positivehalf</throttle>
+                <triggerbutton index="1">
+                    <slots>
+                        <slot>
+                            <code>1</code>
+                            <mode>mousebutton</mode>
+                        </slot>
+                    </slots>
+                </triggerbutton>
+            </trigger>
             <button index="5">
                 <slots>
                     <slot>
-                        <code>0x1000020</code>
+                        <code>0x35</code>
                         <mode>keyboard</mode>
                     </slot>
                 </slots>
             </button>
-
-            <!-- Start → Escape (menu) -->
+            <button index="11">
+                <slots>
+                    <slot>
+                        <code>0x36</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                </slots>
+            </button>
+            <button index="3">
+                <slots>
+                    <slot>
+                        <code>0x33</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                </slots>
+            </button>
             <button index="6">
                 <slots>
                     <slot>
@@ -176,27 +369,38 @@
                     </slot>
                 </slots>
             </button>
-
-            <!-- Back / Select → M (map) -->
-            <button index="10">
+            <button index="7">
                 <slots>
                     <slot>
-                        <code>0x4d</code>
+                        <code>0x1000000</code>
                         <mode>keyboard</mode>
                     </slot>
                 </slots>
             </button>
-
-            <!-- RB → ] (next weapon) -->
-            <button index="11">
+            <button index="4">
                 <slots>
                     <slot>
-                        <code>0x5d</code>
+                        <code>0x34</code>
                         <mode>keyboard</mode>
                     </slot>
                 </slots>
             </button>
-
+            <button index="1">
+                <slots>
+                    <slot>
+                        <code>0x31</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                </slots>
+            </button>
+            <button index="2">
+                <slots>
+                    <slot>
+                        <code>0x32</code>
+                        <mode>keyboard</mode>
+                    </slot>
+                </slots>
+            </button>
         </set>
     </sets>
 </gamecontroller>
