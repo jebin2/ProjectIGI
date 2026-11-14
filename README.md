@@ -1,182 +1,38 @@
-# Project IGI: I'm Going In — Linux Setup Guide
+# Project IGI: I'm Going In — Linux
 
-Running on: **CachyOS / Arch Linux** via **Lutris + GE-Proton + Wine**
+One command to install and play Project IGI (2000) on Arch-based Linux with Wine.
+
+```bash
+git clone https://github.com/jebin2/ProjectIGI.git
+cd ProjectIGI
+./play.sh
+```
+
+The first run installs everything and starts the game. After that, `./play.sh` starts the game straight away. It's also in your app launcher as **Project IGI**.
 
 ---
 
-## Prerequisites
+## What `play.sh` does on first run
 
-Install required tools:
+1. **Installs missing packages** with `sudo pacman -S --needed` (`wine`, `libisoburn`, `libarchive`, `unzip`, `curl`, `python`). It only asks for your password if something is missing.
+2. **Downloads the original US disc** (Redump copy, ~260 MB) from [archive.org](https://archive.org/details/Nova_ProjectIGIUSA) and checks its MD5. It's kept in `~/Games/ProjectIGI/source/`, so re-runs don't download it again.
+3. **Creates a dedicated Wine prefix** at `~/Games/ProjectIGI/prefix`. It uses a 32-bit prefix when your Wine build supports one, otherwise the default.
+4. **Copies the game straight off the disc image**: it converts the data track to ISO and extracts `pc/`. No mounting, no sudo, no Windows installer.
+5. **Applies the no-CD exe** (`igi_v10_all.zip`, the v1.0 Fixed EXE), so the disc is never needed.
+6. **Skips the intro/outro videos.** They are Indeo 5 `.avi` files that crash Wine, so they are renamed to `.avi.bak`.
+7. **Adds a launcher**: `~/Games/ProjectIGI/igi` plus an app-launcher entry. On Wayland it uses Wine's native Wayland driver, which scales the game's 4:3 picture to fill the screen height. Through XWayland it would sit small in the top-left corner. It also turns off Wine's separate Direct3D render thread (`csmt=0`). IGI locks a vertex buffer on almost every draw, and with that thread on each lock stalls: about 8–9 fps instead of about 30.
 
-```bash
-sudo pacman -S wine wine-mono winetricks lutris mdf2iso p7zip unzip
-```
+**Resolution:** `play.sh` sets missions to 1600×1200. That's 4:3 like the game, and on a 1200-pixel-tall screen it needs no vertical scaling. Change it in-game under **Configuration → Graphics**. The menus are always 640×480 (their artwork is drawn at that size), so they look soft whatever you pick.
 
----
+`./play.sh --reinstall` repairs the install. To install somewhere else, use `IGI_HOME=/path ./play.sh`.
 
-## Step 1 — Download the game files
-
-### From [myabandonware.com](https://www.myabandonware.com/game/project-i-g-i-i-m-going-in-b9h)
-
-Download all three:
-
-- **ISO Version** (337 MB) — `Project-IGI-Im-Going-In_Win_EN_ISO-Version.zip`
-- **Game Loader fix** — `Project-IGI-Im-Going-In_Fix_Win_EN.zip`
-- **IV50 Codec for Videos** — `Project-IGI-I-m-Going-In_Fix_Win_EN_IV50-Codec-for-Videos.zip`
-
-### From [gamecopyworld.com](https://gamecopyworld.com/games/pc_project_igi.shtml)
-
-Download:
-
-- **No-CD Fixed EXE** → `Project I.G.I. v1.0 [ALL] Fixed EXE` → `igi_v10_all.zip`
-
-> Scan with ClamAV or [VirusTotal](https://www.virustotal.com) before use. ClamAV result was clean; 2/70 detections on VirusTotal are known false positives for old game patches.
-
----
-
-## Step 2 — Organise files
+### Uninstall
 
 ```bash
-mkdir -p ~/Games/ProjectIGI/{source,iso,patches}
-
-# Move downloaded zips into source/
-mv Project-IGI-Im-Going-In_Win_EN_ISO-Version.zip ~/Games/ProjectIGI/source/
-mv Project-IGI-Im-Going-In_Fix_Win_EN.zip ~/Games/ProjectIGI/source/
-mv "Project-IGI-I-m-Going-In_Fix_Win_EN_IV50-Codec-for-Videos.zip" ~/Games/ProjectIGI/source/
-mv igi_v10_all.zip ~/Games/ProjectIGI/source/
+./play.sh --uninstall
 ```
 
----
-
-## Step 3 — Extract the ISO
-
-```bash
-cd ~/Games/ProjectIGI/source
-7z x Project-IGI-Im-Going-In_Win_EN_ISO-Version.zip -o../iso/
-```
-
-The zip contains a `.mdf` disc image. Convert it to `.iso` since Wine cannot mount `.mdf` directly:
-
-```bash
-cd ~/Games/ProjectIGI/iso/"Project IGI ISO"
-mdf2iso "Project IGI.mdf" "Project IGI.iso"
-```
-
-Mount the ISO:
-
-```bash
-sudo mkdir -p /mnt/igi
-sudo mount -o loop "Project IGI.iso" /mnt/igi
-ls /mnt/igi   # should show: setup.exe, autorun.exe, pc/, directx/, etc.
-```
-
----
-
-## Step 4 — Extract patches
-
-```bash
-cd ~/Games/ProjectIGI/source
-
-unzip Project-IGI-Im-Going-In_Fix_Win_EN.zip -d ../patches/IGI_loader/
-unzip "Project-IGI-I-m-Going-In_Fix_Win_EN_IV50-Codec-for-Videos.zip" -d "../patches/IV50 Codec/"
-unzip igi_v10_all.zip -d ../patches/nocd/
-```
-
----
-
-## Step 5 — Install the game via Lutris
-
-1. Open **Lutris** → click **+** → **Add locally installed game**
-2. Set:
-   - **Name:** `Project IGI`
-   - **Runner:** `Wine` (select GE-Proton as the Wine version)
-3. Go to **Game options** tab:
-   - **Executable:** `/mnt/igi/setup.exe`
-   - **Working directory:** `/mnt/igi`
-4. Click **Save** → **Play** — a Windows-style installer will appear
-5. Follow the installer with default settings
-
-The game installs to:
-```
-~/Games/umu/umu-default/drive_c/Program Files (x86)/Eidos Interactive/I'm Going In/pc/
-```
-
-> The Wine prefix path may vary. Check `~/Games/umu/` or `~/.wine/` if not found.
-
----
-
-## Step 6 — Apply the No-CD patch
-
-The original `IGI.exe` requires the game CD on every launch. Replace it with the patched version:
-
-```bash
-GAME_DIR=~/"Games/umu/umu-default/drive_c/Program Files (x86)/Eidos Interactive/I'm Going In/pc"
-
-cp ~/Games/ProjectIGI/patches/nocd/IGI.exe "$GAME_DIR/IGI.exe"
-```
-
----
-
-## Step 7 — Copy extra files into the game folder
-
-**IGI Loader** (optional — CD bypass loader, fallback if no-CD patch alone doesn't work):
-
-```bash
-cp ~/Games/ProjectIGI/patches/IGI_loader/IGILoader.exe "$GAME_DIR/"
-cp ~/Games/ProjectIGI/patches/IGI_loader/InjectIGI.dll "$GAME_DIR/"
-```
-
-**cnc-ddraw** (DirectDraw wrapper — fixes graphics glitches on modern systems):
-
-Download from [github.com/CnCNet/cnc-ddraw/releases](https://github.com/CnCNet/cnc-ddraw/releases/latest):
-
-```bash
-cd ~/Games/ProjectIGI/patches
-wget https://github.com/CnCNet/cnc-ddraw/releases/latest/download/cnc-ddraw.zip
-unzip cnc-ddraw.zip -d cnc-ddraw
-cp cnc-ddraw/ddraw.dll "$GAME_DIR/"
-```
-
-**IV50 Codec** (installs the Intel Indeo Video 5.0 decoder into Wine):
-
-```bash
-WINEPREFIX=~/Games/umu/umu-default wine ~/Games/ProjectIGI/patches/"IV50 Codec"/codinstl.exe
-```
-
-> **Note:** The IV50 codec installs the correct video decoder but does not fully fix video playback. The intro videos still crash Wine due to `winegstreamer.dll` missing the `winegstreamer_create_color_converter` function — a known unimplemented feature in Wine when using a 64-bit prefix. The workaround is to rename the intro videos (Step 8). A proper fix would require recreating the Wine prefix with `WINEARCH=win32`.
-
----
-
-## Step 8 — Fix intro video crash
-
-Wine crashes when trying to play the `.avi` intro videos due to a GStreamer incompatibility. Rename them so the game skips them:
-
-```bash
-INTRO_DIR=~/"Games/umu/umu-default/drive_c/Program Files (x86)/Eidos Interactive/I'm Going In/pc/screens/intro"
-
-mv "$INTRO_DIR/eidos.avi"     "$INTRO_DIR/eidos.avi.bak"
-mv "$INTRO_DIR/innerloop.avi" "$INTRO_DIR/innerloop.avi.bak"
-mv "$INTRO_DIR/intro_us.avi"  "$INTRO_DIR/intro_us.avi.bak"
-mv "$INTRO_DIR/vp.avi"        "$INTRO_DIR/vp.avi.bak"
-```
-
-> The `outro.avi` file can be left as-is — it only plays at the end of the game.
-
----
-
-## Step 9 — Configure Lutris to launch the game
-
-1. Right-click **Project IGI** in Lutris → **Configure**
-2. **Game options** tab — update:
-   - **Executable:**
-     ```
-     /home/YOUR_USERNAME/Games/umu/umu-default/drive_c/Program Files (x86)/Eidos Interactive/I'm Going In/pc/IGI.exe
-     ```
-   - **Working directory:**
-     ```
-     /home/YOUR_USERNAME/Games/umu/umu-default/drive_c/Program Files (x86)/Eidos Interactive/I'm Going In/pc
-     ```
-3. Click **Save** → **Play**
+This removes `~/Games/ProjectIGI` and the launcher entry. Packages such as `wine` are left installed.
 
 ---
 
@@ -184,76 +40,53 @@ mv "$INTRO_DIR/vp.avi"        "$INTRO_DIR/vp.avi.bak"
 
 | Problem | Fix |
 |---------|-----|
-| `IGI CD not found` error | Apply the no-CD patch (Step 6) |
-| Game crashes immediately | Rename intro `.avi` files (Step 8) |
-| Black screen / graphics issues | Make sure `ddraw.dll` from cnc-ddraw is in the game folder (Step 7) |
-| `wrong ELF class` errors in logs | Harmless warnings — game still runs |
-| Game not detected as controller-compatible | Not applicable — IGI is keyboard/mouse only |
+| Game won't start / need logs | Run `WINEDEBUG=err+all ~/Games/ProjectIGI/igi` in a terminal |
+| `IGI CD not found` | Run `./play.sh --reinstall` (it re-applies the no-CD exe) |
+| Broken download | Delete `~/Games/ProjectIGI/source/igi-usa.7z`, then `./play.sh --reinstall` |
+| Game sits small in a corner | You're running it through XWayland; start it via `./play.sh` or `~/Games/ProjectIGI/igi`, which use the Wayland driver |
+| Game keeps running after you quit | `WINEPREFIX=~/Games/ProjectIGI/prefix wineserver -k` |
+| Want to start over | `./play.sh --reinstall` |
 
 ---
 
-## File Structure Reference
+## Controller support (8BitDo Ultimate 2C)
 
-```
-~/Games/ProjectIGI/
-├── source/         # original downloaded zips (keep as backup)
-├── iso/
-│   └── Project IGI ISO/
-│       ├── Project IGI.mdf
-│       ├── Project IGI.mds
-│       └── Project IGI.iso   # converted, used for install
-└── patches/
-    ├── nocd/
-    │   └── IGI.exe           # no-CD patched executable
-    ├── IGI_loader/
-    │   ├── IGILoader.exe
-    │   └── InjectIGI.dll
-    ├── IV50 Codec/
-    │   └── codinstl.exe
-    └── cnc-ddraw/
-        └── ddraw.dll
-```
-
----
-
-## Controller Support (8BitDo Ultimate 2C)
-
-Project IGI has **no native controller support** — keyboard + mouse only. Use **AntiMicroX** to map your controller.
+IGI is keyboard + mouse only. `controller_mapping.gamecontroller.amgp` is an [AntiMicroX](https://github.com/AntiMicroX/antimicrox) profile that maps a controller to IGI's default keys.
 
 ```bash
 sudo pacman -S antimicrox
 ```
 
-A ready-made profile is included: `controller_mapping.gamecontroller.amgp`
+Open AntiMicroX → **Load Profile** → pick the `.amgp` file, then start the game.
 
-### Load the profile in AntiMicroX
-
-1. Open AntiMicroX
-2. Click **Load Profile** → select `controller_mapping.gamecontroller.amgp`
-3. Launch IGI from Lutris — AntiMicroX runs in background and translates inputs
-
-### Button mapping
-
-| Controller | Action | Key |
-|-----------|--------|-----|
-| Left stick | Move | W / A / S / D |
-| Right stick | Look / Aim | Mouse move |
-| RT | Shoot | Left click |
-| LT | Zoom / Aim | Right click |
-| A | Jump | Space |
-| B | Crouch | C |
-| X | Reload | R |
-| Y | Interact | F |
-| LB | Sneak | Left Shift |
-| RB | Next weapon | ] |
-| Start | Menu | Escape |
-| Back | Map | M |
+| Controller | Key sent | In-game action |
+|-----------|----------|----------------|
+| Left stick | Arrow keys | Move |
+| Right stick | Mouse movement | Look / aim |
+| RT | Left click | Fire |
+| LT | Right click | Next weapon |
+| A | Keypad 0 | Jump |
+| B | Backspace | Alternate fire |
+| X | Enter | Reload |
+| Y | Right Shift | Activate |
+| LB | C | Map computer |
+| RB | Right Ctrl | Crouch |
+| Left stick click | Keypad 1 | Peek |
+| D-pad up / down | Page Up / Page Down | Zoom in / out |
+| D-pad left | O | Previous weapon |
+| D-pad right | W | Walk / run toggle |
+| Back | Space | Binoculars |
+| Start | Right Shift | Activate |
+| Guide | Escape | Menu |
 
 ---
 
-## Notes
+## Files in this repo
 
-- The ISO does **not** need to be mounted after the no-CD patch is applied
-- Wine prefix: `~/Games/umu/umu-default/`
-- GStreamer errors in Lutris logs are harmless
-- If the game has graphical issues, try setting **Wine architecture** to `win32` in Lutris → Runner options
+| File | Purpose |
+|------|---------|
+| `play.sh` | Installs on first run, then starts the game |
+| `igi_v10_all.zip` | No-CD `IGI.exe` (v1.0, from gamecopyworld) |
+| `controller_mapping.gamecontroller.amgp` | AntiMicroX controller profile |
+| `Project-IGI-Im-Going-In_Fix_Win_EN.zip` | IGI Loader (alternative CD bypass; not used by `play.sh`) |
+| `Project-IGI-I-m-Going-In_Fix_Win_EN_IV50-Codec-for-Videos.zip` | Indeo 5 codec installer (not used: the videos are skipped instead) |
