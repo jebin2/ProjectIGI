@@ -1,6 +1,6 @@
-# Project IGI: I'm Going In — Linux
+# Project IGI on Linux
 
-One command to install and play Project IGI (2000) on Arch-based Linux with Wine.
+Play Project IGI: I'm Going In (2000) on Arch-based Linux with Wine, using one command.
 
 ```bash
 git clone https://github.com/jebin2/ProjectIGI.git
@@ -8,93 +8,61 @@ cd ProjectIGI
 ./play.sh
 ```
 
-The first run installs everything and starts the game. After that, `./play.sh` starts the game straight away. It's also in your app launcher as **Project IGI**.
+The first run installs everything and starts the game. After that it just starts the game. It's also in your app launcher as **Project IGI**.
 
----
+## Commands
 
-## What `play.sh` does on first run
+| Command | Does |
+|---------|------|
+| `./play.sh` | Install if needed, then play |
+| `./play.sh --reinstall` | Repair the install, then play |
+| `./play.sh --uninstall` | Remove the game and launcher (packages stay) |
+| `./play.sh --publish` | Upload your install as a ready-made bundle (private repo) |
+| `./play.sh --export [FILE]` | Write that bundle to a local file |
+| `./play.sh --import FILE` | Install from a bundle file |
 
-1. **Installs missing packages** with `sudo pacman -S --needed` (`wine`, `libisoburn`, `libarchive`, `unzip`, `curl`, `python`). It only asks for your password if something is missing.
-2. **Downloads the original US disc** (Redump copy, ~260 MB) from [archive.org](https://archive.org/details/Nova_ProjectIGIUSA) and checks its MD5. It's kept in `~/Games/ProjectIGI/source/`, so re-runs don't download it again.
-3. **Creates a dedicated Wine prefix** at `~/Games/ProjectIGI/prefix`. It uses a 32-bit prefix when your Wine build supports one, otherwise the default.
-4. **Copies the game straight off the disc image**: it converts the data track to ISO and extracts `pc/`. No mounting, no sudo, no Windows installer.
-5. **Applies the no-CD exe** (`igi_v10_all.zip`, the v1.0 Fixed EXE), so the disc is never needed.
-6. **Skips the intro/outro videos.** They are Indeo 5 `.avi` files that crash Wine, so they are renamed to `.avi.bak`.
-7. **Adds a launcher**: `~/Games/ProjectIGI/igi` plus an app-launcher entry with the game's own icon. On Wayland it uses Wine's native Wayland driver, which scales the game's 4:3 picture to fill the screen height. Through XWayland it would sit small in the top-left corner. It also turns off Wine's separate Direct3D render thread (`csmt=0`). IGI locks a vertex buffer on almost every draw, and with that thread on each lock stalls: about 8–9 fps instead of about 30.
+The game installs to `~/Games/ProjectIGI`. Set `IGI_HOME=/path` to put it elsewhere.
 
-**Resolution:** `play.sh` sets missions to 1600×1200. That's 4:3 like the game, and on a 1200-pixel-tall screen it needs no vertical scaling. Change it in-game under **Configuration → Graphics**. The menus are always 640×480 (their artwork is drawn at that size), so they look soft whatever you pick.
+## How it works
 
-`./play.sh --reinstall` repairs the install. To install somewhere else, use `IGI_HOME=/path ./play.sh`.
+- **Packages:** installs anything missing with `sudo pacman` (`wine`, `libisoburn`, and AntiMicroX if a gamepad is plugged in).
+- **Game files:** taken from the latest release of the **private** repo `jebin2/ProjectIGI-bundle` if `gh` can see it (~230 MB, ready in about a minute). Otherwise it downloads the original US disc from [archive.org](https://archive.org/details/Nova_ProjectIGIUSA) (MD5-checked) and copies the game straight off the image. The bundle contains the full game: keep that repo private.
+- **Fixes applied:**
+  - No-CD exe, so no disc check.
+  - The intro videos are skipped, because they crash Wine.
+  - Missions run at 1600×1200 instead of 640×480. The menus stay 640×480.
+  - Wine's Wayland driver, so the picture fills the screen instead of sitting in a corner.
+  - `csmt=0`, which takes the game from about 8 fps to about 30.
 
-### Ready-made bundle (skips archive.org)
+## Controller
 
-`play.sh` first looks for a ready-made bundle: the installed, already-patched game folder (~230 MB) attached to a release in the **private** repo `jebin2/ProjectIGI-bundle`. If `gh` is logged in with access, a fresh install downloads that and is ready in about a minute. Otherwise it falls back to archive.org automatically.
+Built for an 8BitDo Ultimate 2C, but any gamepad works. With one plugged in, the launcher loads the AntiMicroX profile automatically.
 
-```bash
-./play.sh --publish          # pack your current install and upload it as a new release
-./play.sh --export [FILE]    # just write the bundle file (+ .sha256) locally
-./play.sh --import FILE      # install from a bundle file you already have
-```
-
-The bundle contains the full game, so it must stay private. `--publish` refuses to upload if the repo isn't private. Use `IGI_BUNDLE_REPO=owner/repo` to point at a different repo.
-
-### Uninstall
-
-```bash
-./play.sh --uninstall
-```
-
-This removes `~/Games/ProjectIGI` and the launcher entry. Packages such as `wine` are left installed.
-
----
+| Button | Action | | Button | Action |
+|--------|--------|-|--------|--------|
+| Left stick | Move | | A | Jump |
+| Right stick | Look | | B | Crouch |
+| RT | Fire | | X | Reload |
+| LT | Alternate fire | | Y | Use |
+| RB | Next weapon | | L3 | Walk / run |
+| LB (hold) + stick | Peek / lean | | R3 | Binoculars |
+| D-pad ↑ / ↓ | Zoom in / out | | Back | Map |
+| D-pad ← | Previous weapon | | Start | Menu |
 
 ## Troubleshooting
 
 | Problem | Fix |
 |---------|-----|
-| Game won't start / need logs | Run `WINEDEBUG=err+all ~/Games/ProjectIGI/igi` in a terminal |
-| `IGI CD not found` | Run `./play.sh --reinstall` (it re-applies the no-CD exe) |
-| Broken download | Delete `~/Games/ProjectIGI/source/igi-usa.7z`, then `./play.sh --reinstall` |
-| Game sits small in a corner | You're running it through XWayland; start it via `./play.sh` or `~/Games/ProjectIGI/igi`, which use the Wayland driver |
-| Game keeps running after you quit | On Hyprland the launcher ends it automatically. Elsewhere it's cleared at the next launch, or run `WINEPREFIX=~/Games/ProjectIGI/prefix wineserver -k` |
-| Want to start over | `./play.sh --reinstall` |
+| Need logs | `WINEDEBUG=err+all ~/Games/ProjectIGI/igi` |
+| Small picture in a corner | Start it with `./play.sh` or the app launcher, not under XWayland |
+| Game lingers after quitting | Ended automatically on Hyprland. Otherwise run `WINEPREFIX=~/Games/ProjectIGI/prefix wineserver -k` |
+| Anything else broken | `./play.sh --reinstall` |
 
----
-
-## Controller support (8BitDo Ultimate 2C)
-
-IGI is keyboard + mouse only. `controller_mapping.gamecontroller.amgp` is an [AntiMicroX](https://github.com/AntiMicroX/antimicrox) profile that maps a controller to IGI's default keys.
-
-**Automatic:** if a controller is plugged in, `play.sh` installs AntiMicroX. The launcher then loads this profile while the game runs and closes AntiMicroX afterwards, unless it was already running, in which case it leaves it alone. To set it up by hand instead: AntiMicroX → **Load Profile** → pick the `.amgp` file.
-
-| Controller | In-game action | Key sent |
-|-----------|----------------|----------|
-| Left stick | Move | Arrow keys |
-| Right stick | Look / aim | Mouse movement |
-| RT | Fire | Left click |
-| LT | Alternate fire | Backspace |
-| RB | Next weapon | Right click |
-| LB (hold) + left stick left/right | Peek / lean | Keypad 1 |
-| A | Jump | Keypad 0 |
-| B | Crouch | Right Ctrl |
-| X | Reload | Enter |
-| Y | Activate / use | Right Shift |
-| Left stick click | Walk / run toggle | W |
-| Right stick click | Binoculars | Space |
-| D-pad up / down | Zoom in / out | Page Up / Page Down |
-| D-pad left | Previous weapon | O |
-| Back | Map computer | C |
-| Start | Menu | Escape |
-
-Right-stick look speed is 25 horizontal and 20 vertical (AntiMicroX's default is 50).
-
----
-
-## Files in this repo
+## Files
 
 | File | Purpose |
 |------|---------|
-| `play.sh` | Installs on first run, then starts the game |
-| `igi_v10_all.zip` | No-CD `IGI.exe` (v1.0, from gamecopyworld) |
+| `play.sh` | Installer and launcher |
+| `igi_v10_all.zip` | No-CD `IGI.exe` (v1.0) |
 | `controller_mapping.gamecontroller.amgp` | AntiMicroX controller profile |
-| `igi.png` | App-launcher icon (from `IGI.exe`) |
+| `igi.png` | App-launcher icon |
