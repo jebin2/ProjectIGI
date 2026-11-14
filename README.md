@@ -26,6 +26,18 @@ The first run installs everything and starts the game. After that, `./play.sh` s
 
 `./play.sh --reinstall` repairs the install. To install somewhere else, use `IGI_HOME=/path ./play.sh`.
 
+### Ready-made bundle (skips archive.org)
+
+`play.sh` first looks for a ready-made bundle: the installed, already-patched game folder (~230 MB) attached to a release in the **private** repo `jebin2/ProjectIGI-bundle`. If `gh` is logged in with access, a fresh install downloads that and is ready in about a minute. Otherwise it falls back to archive.org automatically.
+
+```bash
+./play.sh --publish          # pack your current install and upload it as a new release
+./play.sh --export [FILE]    # just write the bundle file (+ .sha256) locally
+./play.sh --import FILE      # install from a bundle file you already have
+```
+
+The bundle contains the full game, so it must stay private. `--publish` refuses to upload if the repo isn't private. Use `IGI_BUNDLE_REPO=owner/repo` to point at a different repo.
+
 ### Uninstall
 
 ```bash

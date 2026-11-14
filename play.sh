@@ -4,10 +4,14 @@
 #   ./play.sh              install on first run, then start the game
 #   ./play.sh --reinstall  repair the install, then start the game
 #   ./play.sh --uninstall  remove the game, prefix and launcher
+#   ./play.sh --export [FILE]   pack the installed, patched game into one file
+#   ./play.sh --publish         export + upload it to the private bundle repo
+#   ./play.sh --import FILE     install from a bundle file, then start the game
 #
 # On first run everything is set up automatically:
 #   - missing packages via pacman (asks for your sudo password once)
-#   - the original US disc (Redump copy from archive.org, MD5-checked)
+#   - the game: from the private bundle release if `gh` can see it, otherwise
+#     the original US disc (Redump copy from archive.org, MD5-checked)
 #   - a dedicated Wine prefix, the no-CD exe, an app-launcher entry
 # No Lutris, no loop-mounting, no Windows installer.
 
@@ -26,6 +30,11 @@ DISC_URL="https://archive.org/download/Nova_ProjectIGIUSA/Project%20IGI%20-%20I%
 DISC_FILE="$CACHE/igi-usa.7z"
 DISC_MD5="40aa4f19d20c6dbfa65a16a54832af06"
 
+# Ready-made bundle of the patched game folder, kept in a PRIVATE GitHub repo
+# (it contains the full game, so it must not be public). Fetched with `gh`;
+# anyone without access silently falls back to archive.org.
+BUNDLE_REPO="${IGI_BUNDLE_REPO:-jebin2/ProjectIGI-bundle}"
+BUNDLE_ASSET="igi-game.tar.zst"
 
 say()  { printf '\033[1;32m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m==>\033[0m %s\n' "$*" >&2; }
@@ -95,6 +104,67 @@ PY
     || die "Could not read the game folder from the disc image"
   chmod -R u+w "$GAME"
   rm -rf "$work"
+}
+
+export_bundle() {  # [out-file] -> prints path
+  [[ -f "$MARKER" && -f "$GAME/IGI.exe" ]] || die "Nothing to export: install the game first"
+  local out="${1:-$PWD/$BUNDLE_ASSET}"
+  say "Packing $GAME" >&2
+  tar -C "$(dirname "$GAME")" -I 'zstd -19 -T0 -q' -cf "$out.part" "$(basename "$GAME")"
+  mv "$out.part" "$out"
+  (cd "$(dirname "$out")" && sha256sum "$(basename "$out")" >"$(basename "$out").sha256")
+  say "Wrote $out ($(du -h "$out" | cut -f1)) and $(basename "$out").sha256" >&2
+  printf '%s\n' "$out"
+}
+
+publish_bundle() {
+  command -v gh >/dev/null || die "publish needs the GitHub CLI (gh)"
+  local dir out tag
+  dir="$(mktemp -d)"; out="$(export_bundle "$dir/$BUNDLE_ASSET")"
+  if ! gh repo view "$BUNDLE_REPO" >/dev/null 2>&1; then
+    say "Creating private repo $BUNDLE_REPO"
+    gh repo create "$BUNDLE_REPO" --private --add-readme \
+      --description "Private ready-made Project IGI bundle for ProjectIGI/play.sh" >/dev/null
+  fi
+  [[ "$(gh repo view "$BUNDLE_REPO" --json visibility -q .visibility)" == PRIVATE ]] \
+    || die "$BUNDLE_REPO is not private; refusing to upload the game there"
+  tag="bundle-$(date +%Y%m%d-%H%M%S)"
+  say "Uploading to $BUNDLE_REPO release $tag"
+  gh release create "$tag" -R "$BUNDLE_REPO" --latest --title "$tag" \
+    --notes "Patched Project IGI game folder for play.sh --import (made by --publish)." \
+    "$out" "$out.sha256" >/dev/null
+  rm -rf "$dir"
+  say "Published. New installs with access to $BUNDLE_REPO will use it."
+}
+
+get_bundle() {  # prints a verified local bundle path, or returns 1
+  local f="${IGI_BUNDLE:-}"
+  if [[ -n "$f" ]]; then
+    [[ -f "$f" ]] || { warn "Bundle not found: $f"; return 1; }
+    if [[ -f "$f.sha256" ]]; then
+      (cd "$(dirname "$f")" && sha256sum -c --status "$(basename "$f").sha256") \
+        || { warn "Checksum mismatch: $f"; return 1; }
+    fi
+    printf '%s\n' "$f"; return 0
+  fi
+  command -v gh >/dev/null || return 1
+  gh release view -R "$BUNDLE_REPO" >/dev/null 2>&1 || return 1
+  mkdir -p "$CACHE"
+  say "Downloading the ready-made game bundle from $BUNDLE_REPO" >&2
+  rm -f "$CACHE/$BUNDLE_ASSET" "$CACHE/$BUNDLE_ASSET.sha256"
+  gh release download -R "$BUNDLE_REPO" -D "$CACHE" -p "$BUNDLE_ASSET" -p "$BUNDLE_ASSET.sha256" \
+    || { warn "Bundle download failed"; return 1; }
+  (cd "$CACHE" && sha256sum -c --status "$BUNDLE_ASSET.sha256") \
+    || { warn "Bundle checksum mismatch"; return 1; }
+  printf '%s\n' "$CACHE/$BUNDLE_ASSET"
+}
+
+unpack_bundle() {
+  say "Unpacking the game bundle"
+  if [[ -e "$GAME" ]]; then chmod -R u+w "$GAME"; rm -rf "$GAME"; fi
+  mkdir -p "$(dirname "$GAME")"
+  tar -C "$(dirname "$GAME")" -I zstd -xf "$1"
+  [[ -f "$GAME/IGI.exe" ]] || die "Bundle did not contain the game folder"
 }
 
 make_prefix() {
@@ -211,9 +281,16 @@ install() {
   install_deps
   mkdir -p "$ROOT"
   rm -f "$MARKER"
-  fetch_disc
-  make_prefix
-  extract_game
+  local bundle
+  if bundle="$(get_bundle)"; then
+    make_prefix
+    unpack_bundle "$bundle"
+  else
+    [[ -z "${IGI_BUNDLE:-}" ]] || die "Could not use bundle $IGI_BUNDLE"
+    fetch_disc
+    make_prefix
+    extract_game
+  fi
   patch_game
   touch "$MARKER"
   say "Installed. Next time you can also start it from your app launcher (\"Project IGI\")."
@@ -223,7 +300,11 @@ main() {
   case "${1:-}" in
     --uninstall) uninstall; return ;;
     --reinstall) install ;;
-    -h|--help) sed -n '2,13p' "$0"; return ;;
+    --export) export_bundle "${2:-}" >/dev/null; return ;;
+    --publish) publish_bundle; return ;;
+    --import) [[ -n "${2:-}" ]] || die "Usage: ./play.sh --import FILE"
+              IGI_BUNDLE="$(realpath "$2")"; install ;;
+    -h|--help) sed -n '2,18p' "$0"; return ;;
     "") if [[ -f "$MARKER" ]]; then install_deps; else install; fi ;;
     *) die "Unknown option: $1 (try --help)" ;;
   esac
