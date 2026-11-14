@@ -55,25 +55,26 @@ IGI is keyboard + mouse only. `controller_mapping.gamecontroller.amgp` is an [An
 
 **Automatic:** if a controller is plugged in, `play.sh` installs AntiMicroX. The launcher then loads this profile while the game runs and closes AntiMicroX afterwards, unless it was already running, in which case it leaves it alone. To set it up by hand instead: AntiMicroX → **Load Profile** → pick the `.amgp` file.
 
-| Controller | Key sent | In-game action |
-|-----------|----------|----------------|
-| Left stick | Arrow keys | Move |
-| Right stick | Mouse movement | Look / aim |
-| RT | Left click | Fire |
-| LT | Right click | Next weapon |
-| A | Keypad 0 | Jump |
-| B | Backspace | Alternate fire |
-| X | Enter | Reload |
-| Y | Right Shift | Activate |
-| LB | C | Map computer |
-| RB | Right Ctrl | Crouch |
-| Left stick click | Keypad 1 | Peek |
-| D-pad up / down | Page Up / Page Down | Zoom in / out |
-| D-pad left | O | Previous weapon |
-| D-pad right | W | Walk / run toggle |
-| Back | Space | Binoculars |
-| Start | Right Shift | Activate |
-| Guide | Escape | Menu |
+| Controller | In-game action | Key sent |
+|-----------|----------------|----------|
+| Left stick | Move | Arrow keys |
+| Right stick | Look / aim | Mouse movement |
+| RT | Fire | Left click |
+| LT | Alternate fire | Backspace |
+| RB | Next weapon | Right click |
+| LB | Previous weapon | O |
+| A | Jump | Keypad 0 |
+| B | Crouch | Right Ctrl |
+| X | Reload | Enter |
+| Y | Activate / use | Right Shift |
+| Left stick click | Walk / run toggle | W |
+| Right stick click | Binoculars | Space |
+| D-pad up / down | Zoom in / out | Page Up / Page Down |
+| D-pad left | Peek | Keypad 1 |
+| Back | Map computer | C |
+| Start | Menu | Escape |
+
+Right-stick look speed is 25 horizontal and 20 vertical (AntiMicroX's default is 50).
 
 ---
 
