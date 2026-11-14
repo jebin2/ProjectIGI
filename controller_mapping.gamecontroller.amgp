@@ -60,6 +60,8 @@
                             <mode>mousemovement</mode>
                         </slot>
                     </slots>
+                    <mousespeedx>25</mousespeedx>
+                    <mousespeedy>20</mousespeedy>
                 </stickbutton>
                 <stickbutton index="5">
                     <slots>
@@ -68,6 +70,8 @@
                             <mode>mousemovement</mode>
                         </slot>
                     </slots>
+                    <mousespeedx>25</mousespeedx>
+                    <mousespeedy>20</mousespeedy>
                 </stickbutton>
                 <stickbutton index="3">
                     <slots>
@@ -76,6 +80,8 @@
                             <mode>mousemovement</mode>
                         </slot>
                     </slots>
+                    <mousespeedx>25</mousespeedx>
+                    <mousespeedy>20</mousespeedy>
                 </stickbutton>
                 <stickbutton index="1">
                     <slots>
@@ -84,6 +90,8 @@
                             <mode>mousemovement</mode>
                         </slot>
                     </slots>
+                    <mousespeedx>25</mousespeedx>
+                    <mousespeedy>20</mousespeedy>
                 </stickbutton>
             </stick>
             <dpad index="1">
@@ -270,6 +278,8 @@
                             <mode>mousemovement</mode>
                         </slot>
                     </slots>
+                    <mousespeedx>25</mousespeedx>
+                    <mousespeedy>20</mousespeedy>
                 </stickbutton>
                 <stickbutton index="5">
                     <slots>
@@ -278,6 +288,8 @@
                             <mode>mousemovement</mode>
                         </slot>
                     </slots>
+                    <mousespeedx>25</mousespeedx>
+                    <mousespeedy>20</mousespeedy>
                 </stickbutton>
                 <stickbutton index="3">
                     <slots>
@@ -286,6 +298,8 @@
                             <mode>mousemovement</mode>
                         </slot>
                     </slots>
+                    <mousespeedx>25</mousespeedx>
+                    <mousespeedy>20</mousespeedy>
                 </stickbutton>
                 <stickbutton index="1">
                     <slots>
@@ -294,6 +308,8 @@
                             <mode>mousemovement</mode>
                         </slot>
                     </slots>
+                    <mousespeedx>25</mousespeedx>
+                    <mousespeedy>20</mousespeedy>
                 </stickbutton>
             </stick>
             <dpad index="1">
