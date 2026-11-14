@@ -146,6 +146,16 @@ make_launcher() {
     printf 'ROOT=%q\nGAME=%q\nexport WINEPREFIX=%q\n' "$ROOT" "$GAME" "$PREFIX"
     cat <<'EOF'
 export WINEDEBUG="${WINEDEBUG:--all}"
+# Controller: if AntiMicroX is installed and not already running, load the
+# profile for the length of the game. Start it before DISPLAY is cleared below
+# (it crashes without an X display) and send keys via uinput, which reaches a
+# native Wayland window; its default (XTest) only reaches X11 apps.
+pad=
+if command -v antimicrox >/dev/null && ! pgrep -x antimicrox >/dev/null; then
+  antimicrox --hidden --eventgen uinput --profile "$ROOT/controller.amgp" >/dev/null 2>&1 &
+  pad=$!
+fi
+
 # Wayland: Wine's native Wayland driver scales IGI's 4:3 fullscreen mode to the
 # whole screen (via XWayland it sits small in a corner).
 [[ -n "${WAYLAND_DISPLAY:-}" ]] && unset DISPLAY
@@ -157,13 +167,6 @@ export WINE_D3D_CONFIG="${WINE_D3D_CONFIG:-csmt=0}"
 # A previous session that hung on exit would block this one: clear it.
 pgrep -x IGI.exe >/dev/null && wineserver -k && sleep 1
 
-# Controller: if AntiMicroX is installed and not already running, load the
-# profile for the length of the game.
-pad=
-if command -v antimicrox >/dev/null && ! pgrep -x antimicrox >/dev/null; then
-  antimicrox --hidden --profile "$ROOT/controller.amgp" >/dev/null 2>&1 &
-  pad=$!
-fi
 
 cd "$GAME"
 wine IGI.exe "$@" &
