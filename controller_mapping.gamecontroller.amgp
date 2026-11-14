@@ -114,7 +114,7 @@
                 <dpadbutton index="8">
                     <slots>
                         <slot>
-                            <code>0x2000ffb1</code>
+                            <code>0x4f</code>
                             <mode>keyboard</mode>
                         </slot>
                     </slots>
@@ -211,7 +211,7 @@
             <button index="10">
                 <slots>
                     <slot>
-                        <code>0x4f</code>
+                        <code>0x2000ffb1</code>
                         <mode>keyboard</mode>
                     </slot>
                 </slots>

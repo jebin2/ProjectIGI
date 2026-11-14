@@ -62,7 +62,7 @@ IGI is keyboard + mouse only. `controller_mapping.gamecontroller.amgp` is an [An
 | RT | Fire | Left click |
 | LT | Alternate fire | Backspace |
 | RB | Next weapon | Right click |
-| LB | Previous weapon | O |
+| LB (hold) + left stick left/right | Peek / lean | Keypad 1 |
 | A | Jump | Keypad 0 |
 | B | Crouch | Right Ctrl |
 | X | Reload | Enter |
@@ -70,7 +70,7 @@ IGI is keyboard + mouse only. `controller_mapping.gamecontroller.amgp` is an [An
 | Left stick click | Walk / run toggle | W |
 | Right stick click | Binoculars | Space |
 | D-pad up / down | Zoom in / out | Page Up / Page Down |
-| D-pad left | Peek | Keypad 1 |
+| D-pad left | Previous weapon | O |
 | Back | Map computer | C |
 | Start | Menu | Escape |
 
