@@ -7,6 +7,8 @@
 #   ./play.sh --export [FILE]   pack the installed, patched game into one file
 #   ./play.sh --publish         export + upload it to the private bundle repo
 #   ./play.sh --import FILE     install from a bundle file, then start the game
+#   ./play.sh --mod FILE        add the Neonix Remastered mod zip (HD textures,
+#                               sharp menus, widescreen), then start the game
 #
 # On first run everything is set up automatically:
 #   - missing packages via pacman (asks for your sudo password once)
@@ -110,8 +112,8 @@ export_bundle() {  # [out-file] -> prints path
   [[ -f "$MARKER" && -f "$GAME/IGI.exe" ]] || die "Nothing to export: install the game first"
   local out="${1:-$PWD/$BUNDLE_ASSET}"
   say "Packing $GAME" >&2
-  tar -C "$(dirname "$GAME")" -I 'zstd -19 -T0 -q' -cf "$out.part" "$(basename "$GAME")"
-  mv "$out.part" "$out"
+  tar -C "$(dirname "$GAME")" -I 'zstd -19 -T0 -q' -cf "$out.tmp" "$(basename "$GAME")"
+  mv "$out.tmp" "$out"
   (cd "$(dirname "$out")" && sha256sum "$(basename "$out")" >"$(basename "$out").sha256")
   say "Wrote $out ($(du -h "$out" | cut -f1)) and $(basename "$out").sha256" >&2
   printf '%s\n' "$out"
@@ -128,11 +130,14 @@ publish_bundle() {
   fi
   [[ "$(gh repo view "$BUNDLE_REPO" --json visibility -q .visibility)" == PRIVATE ]] \
     || die "$BUNDLE_REPO is not private; refusing to upload the game there"
+  # GitHub release assets max out at 2 GiB: upload in 1900 MB parts.
+  rm -f "$out".part-*
+  split -b 1900M -d -a 2 "$out" "$out.part-"
   tag="bundle-$(date +%Y%m%d-%H%M%S)"
   say "Uploading to $BUNDLE_REPO release $tag"
   gh release create "$tag" -R "$BUNDLE_REPO" --latest --title "$tag" \
     --notes "Patched Project IGI game folder for play.sh --import (made by --publish)." \
-    "$out" "$out.sha256" >/dev/null
+    "$out".part-* "$out.sha256" >/dev/null
   rm -rf "$dir"
   say "Published. New installs with access to $BUNDLE_REPO will use it."
 }
@@ -151,9 +156,13 @@ get_bundle() {  # prints a verified local bundle path, or returns 1
   gh release view -R "$BUNDLE_REPO" >/dev/null 2>&1 || return 1
   mkdir -p "$CACHE"
   say "Downloading the ready-made game bundle from $BUNDLE_REPO" >&2
-  rm -f "$CACHE/$BUNDLE_ASSET" "$CACHE/$BUNDLE_ASSET.sha256"
-  gh release download -R "$BUNDLE_REPO" -D "$CACHE" -p "$BUNDLE_ASSET" -p "$BUNDLE_ASSET.sha256" \
+  rm -f "$CACHE/$BUNDLE_ASSET"*
+  # Current releases hold numbered parts; the first one held a single file.
+  gh release download -R "$BUNDLE_REPO" -D "$CACHE" -p "$BUNDLE_ASSET*" \
     || { warn "Bundle download failed"; return 1; }
+  if compgen -G "$CACHE/$BUNDLE_ASSET.part-*" >/dev/null; then
+    cat "$CACHE/$BUNDLE_ASSET".part-* >"$CACHE/$BUNDLE_ASSET" && rm -f "$CACHE/$BUNDLE_ASSET".part-*
+  fi
   (cd "$CACHE" && sha256sum -c --status "$BUNDLE_ASSET.sha256") \
     || { warn "Bundle checksum mismatch"; return 1; }
   printf '%s\n' "$CACHE/$BUNDLE_ASSET"
@@ -185,8 +194,12 @@ make_prefix() {
 }
 
 patch_game() {
-  say "Applying the no-CD exe"
-  unzip -o -q "$REPO_DIR/igi_v10_all.zip" IGI.exe -d "$GAME"
+  # The Neonix mod ships its own IGI.exe (loads IGIPatch.dll, which also removes
+  # the CD check); keep it. Otherwise use the plain no-CD exe.
+  if [[ ! -f "$GAME/IGIPatch.dll" ]]; then
+    say "Applying the no-CD exe"
+    unzip -o -q "$REPO_DIR/igi_v10_all.zip" IGI.exe -d "$GAME"
+  fi
 
   # Default mission resolution is 640x480 (GOGfxDisp in config.qvm), which looks
   # very blurry on modern screens. Switch it to 1600x1200 (4:3, fits 1200-line
@@ -196,7 +209,7 @@ import sys
 p = sys.argv[1]; b = open(p, "rb").read()
 old = bytes.fromhex("04 80 02 00 04 e0 01 00 03 20 00")  # 640, 480, 32
 new = bytes.fromhex("04 40 06 00 04 b0 04 00 03 20 00")  # 1600, 1200, 32
-if b.count(old) != 1: sys.exit(0 if new in b else 1)
+if b.count(old) != 1: sys.exit(0)  # already changed (e.g. by --mod): leave it
 open(p, "wb").write(b.replace(old, new))
 PY
 
@@ -205,6 +218,47 @@ PY
   for f in "$GAME"/screens/intro/*.avi; do
     if [[ -e "$f" ]]; then mv -f "$f" "$f.bak"; fi
   done
+}
+
+set_resolution() {  # width height: GOGfxDisp(w, h, bpp) in config.qvm
+  python3 -I - "$GAME/config.qvm" "$1" "$2" <<'PY'
+import re, sys
+p, w, h = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
+b = open(p, "rb").read()
+# GOGfxDisp call: symbol 0x3f, 3 args, then push24 width, push24 height
+m = re.search(rb"\x0d\x3f\x18\x03\x00\x00\x00.{12}\x14.\x00\x00\x00\x04(...)\x04(...)", b, re.S)
+if not m: sys.exit(1)
+b = b[:m.start(1)] + w.to_bytes(3, "little") + b[m.end(1):]
+b = b[:m.start(2)] + h.to_bytes(3, "little") + b[m.end(2):]
+open(p, "wb").write(b)
+PY
+}
+
+native_resolution() {  # prints "W H" of the focused monitor, or nothing
+  if command -v hyprctl >/dev/null && [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
+    hyprctl monitors -j 2>/dev/null | python3 -I -c '
+import json, sys
+m = [x for x in json.load(sys.stdin) if x.get("focused")] or [None]
+if m[0]: print(m[0]["width"], m[0]["height"])' 2>/dev/null
+  elif command -v xrandr >/dev/null; then
+    xrandr 2>/dev/null | sed -n 's/.* current \([0-9]*\) x \([0-9]*\),.*/\1 \2/p' | head -1
+  fi
+}
+
+install_mod() {  # Neonix Remastered zip from Nexus Mods
+  local zip=$1
+  [[ -f "$zip" ]] || die "Mod file not found: $zip"
+  unzip -Z1 "$zip" 2>/dev/null | grep -qx IGIPatch.dll || die "$zip doesn't look like the Neonix Remastered zip"
+  say "Installing the Neonix Remastered mod (~3.7 GB unpacked)"
+  # Left out: ddraw.dll (DDrawCompat, a Windows-only layer that fights Wine's
+  # DirectDraw) and lod.qvm (its LOD changes break near geometry under Wine:
+  # black ground with red streaks). The game's original lod.qvm stays.
+  unzip -o -q "$zip" -x ddraw.dll lod.qvm 'IGIPatch - Debug keys.txt' -d "$GAME"
+  # IGIPatch fixes the widescreen FOV, so run at the screen's own resolution.
+  local res; res="$(native_resolution)"
+  if [[ -n "$res" ]] && set_resolution $res; then
+    say "Resolution set to ${res/ /x}"
+  fi
 }
 
 make_launcher() {
@@ -302,9 +356,12 @@ main() {
     --reinstall) install ;;
     --export) export_bundle "${2:-}" >/dev/null; return ;;
     --publish) publish_bundle; return ;;
+    --mod) [[ -n "${2:-}" ]] || die "Usage: ./play.sh --mod NEONIX_ZIP"
+           [[ -f "$MARKER" ]] || install
+           install_mod "$(realpath "$2")"; patch_game ;;
     --import) [[ -n "${2:-}" ]] || die "Usage: ./play.sh --import FILE"
               IGI_BUNDLE="$(realpath "$2")"; install ;;
-    -h|--help) sed -n '2,18p' "$0"; return ;;
+    -h|--help) sed -n '2,20p' "$0"; return ;;
     "") if [[ -f "$MARKER" ]]; then install_deps; else install; fi ;;
     *) die "Unknown option: $1 (try --help)" ;;
   esac
