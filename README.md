@@ -88,5 +88,3 @@ Open AntiMicroX → **Load Profile** → pick the `.amgp` file, then start the g
 | `play.sh` | Installs on first run, then starts the game |
 | `igi_v10_all.zip` | No-CD `IGI.exe` (v1.0, from gamecopyworld) |
 | `controller_mapping.gamecontroller.amgp` | AntiMicroX controller profile |
-| `Project-IGI-Im-Going-In_Fix_Win_EN.zip` | IGI Loader (alternative CD bypass; not used by `play.sh`) |
-| `Project-IGI-I-m-Going-In_Fix_Win_EN_IV50-Codec-for-Videos.zip` | Indeo 5 codec installer (not used: the videos are skipped instead) |
