@@ -155,7 +155,7 @@
             <button index="2">
                 <slots>
                     <slot>
-                        <code>0x11000021</code>
+                        <code>0x57</code>
                         <mode>keyboard</mode>
                     </slot>
                 </slots>
@@ -195,7 +195,7 @@
             <button index="8">
                 <slots>
                     <slot>
-                        <code>0x57</code>
+                        <code>0x11000021</code>
                         <mode>keyboard</mode>
                     </slot>
                 </slots>

@@ -52,10 +52,10 @@ Built for an 8BitDo Ultimate 2C, but any gamepad works. With one plugged in, the
 | Button | Action | | Button | Action |
 |--------|--------|-|--------|--------|
 | Left stick | Move | | A | Jump |
-| Right stick | Look | | B | Crouch |
+| Right stick | Look | | B | Walk / run |
 | RT | Fire | | X | Reload |
 | LT | Alternate fire | | Y | Use |
-| RB | Next weapon | | L3 | Walk / run |
+| RB | Next weapon | | L3 | Crouch |
 | LB (hold) + stick | Peek / lean | | R3 | Binoculars |
 | D-pad ↑ / ↓ | Zoom in / out | | Back | Map |
 | D-pad ← | Previous weapon | | Start | Menu |
